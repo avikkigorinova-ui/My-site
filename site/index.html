@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Паттерны: Observer, Strategy, Command, Singleton</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 0 16px 48px;
+      background: #f5f7fb;
+      color: #1f2937;
+      line-height: 1.5;
+    }
+    header {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 0 16px;
+    }
+    header h1 { margin: 0 0 8px; font-size: 1.9rem; }
+    header p { margin: 0; color: #4b5563; }
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      display: grid;
+      gap: 24px;
+    }
+    .pattern {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 20px 22px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+    }
+    .pattern h2 {
+      margin: 0 0 6px;
+      font-size: 1.35rem;
+      color: #111827;
+    }
+    .desc {
+      margin: 0 0 14px;
+      color: #4b5563;
+    }
+    .demo {
+      border-top: 1px solid #e5e7eb;
+      padding-top: 14px;
+    }
+    label { font-weight: 600; margin-right: 8px; }
+    select, input {
+      padding: 8px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font: inherit;
+      background: #fff;
+    }
+    select { min-width: 220px; }
+    button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #fff;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: #1d4ed8; }
+    button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    .observer-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 14px 0;
+    }
+    .card, .counter {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 14px;
+      background: #f9fafb;
+    }
+    .card h3 { margin: 0 0 8px; }
+    .card p { margin: 4px 0; }
+    .counter {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #1d4ed8;
+      text-align: center;
+    }
+    .book-list {
+      list-style: none;
+      padding: 0;
+      margin: 14px 0 0;
+      display: grid;
+      gap: 8px;
+    }
+    .book-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #f9fafb;
+    }
+    .command-list li { background: #fff; }
+    .delete-btn {
+      background: #dc2626;
+      padding: 6px 10px;
+      font-size: 0.9rem;
+    }
+    .delete-btn:hover { background: #b91c1c; }
+    .log {
+      margin-top: 10px;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #111827;
+      color: #e5e7eb;
+      padding: 10px 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.85rem;
+    }
+    .log-item { padding: 2px 0; border-bottom: 1px solid #374151; }
+    .log-item:last-child { border-bottom: none; }
+    .muted { color: #6b7280; }
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    form button { grid-column: 1 / -1; }
+    #command-undo { margin-bottom: 8px; }
+    @media (max-width: 640px) {
+      .observer-grid { grid-template-columns: 1fr; }
+      form { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Четыре паттерна на одном наборе данных</h1>
+    <p>
+      Данные загружаются из <code>data.json</code> через <code>fetch</code>.
+      Запустите страницу через локальный веб-сервер.
+    </p>
+  </header>
+
+  <main>
+    <!-- 1. Observer -->
+    <section class="pattern" id="observer">
+      <h2>1. Observer (Наблюдатель)</h2>
+      <p class="desc">
+        При выборе книги обновляются карточка, счётчик просмотров и журнал.
+        Обработчик меняет состояние, а блоки подписаны на его изменение.
+      </p>
+      <div class="demo">
+        <label for="observer-select">Выберите книгу:</label>
+        <select id="observer-select"></select>
+
+        <div class="observer-grid">
+          <div class="card" id="observer-card"></div>
+          <div class="counter" id="observer-counter">Просмотров: 0</div>
+        </div>
+
+        <h3>Журнал Observer</h3>
+        <div class="log" id="observer-log"></div>
+      </div>
+    </section>
+
+    <!-- 2. Strategy -->
+    <section class="pattern" id="strategy">
+      <h2>2. Strategy (Стратегия)</h2>
+      <p class="desc">
+        Переключатель меняет способ сортировки. Каждый способ — отдельная
+        функция, подставляемая во время работы.
+      </p>
+      <div class="demo">
+        <label for="strategy-select">Сортировка:</label>
+        <select id="strategy-select"></select>
+        <ul id="strategy-list" class="book-list"></ul>
+      </div>
+    </section>
+
+    <!-- 3. Command -->
+    <section class="pattern" id="command">
+      <h2>3. Command (Команда)</h2>
+      <p class="desc">
+        Добавление и удаление книги оформлены командами с
+        <code>execute()</code> и <code>undo()</code>.
+        Кнопка «Отменить» откатывает последнее действие.
+      </p>
+      <div class="demo">
+        <form id="command-form">
+          <input type="text" id="cmd-title" placeholder="Название" required>
+          <input type="text" id="cmd-author" placeholder="Автор" required>
+          <input type="number" id="cmd-year" placeholder="Год" required>
+          <input type="number" step="0.1" id="cmd-rating" placeholder="Рейтинг" required>
+          <input type="text" id="cmd-genre" placeholder="Жанр" required>
+          <button type="submit">Добавить книгу</button>
+        </form>
+
+        <button id="command-undo" disabled>Отменить последнее действие</button>
+        <ul id="command-list" class="book-list command-list"></ul>
+
+        <h3>Журнал команд</h3>
+        <div class="log" id="command-log"></div>
+      </div>
+    </section>
+
+    <!-- 4. Singleton -->
+    <section class="pattern" id="singleton">
+      <h2>4. Singleton (Одиночка)</h2>
+      <p class="desc">
+        Общий журнал действий — единственный экземпляр. Разные части страницы
+        обращаются к одному объекту.
+      </p>
+      <div class="demo">
+        <button id="singleton-check">Проверить экземпляры</button>
+        <p id="singleton-out" class="muted">
+          Нажмите кнопку, чтобы сравнить два вызова
+          <code>ActionLog.getInstance()</code>.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
